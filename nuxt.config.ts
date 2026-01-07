@@ -1,10 +1,13 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+    compatibilityDate: '2025-07-15',
+    devtools: { enabled: true },
+
     modules: [
-        '@nuxtjs/tailwindcss'
+        '@nuxtjs/tailwindcss',
+        '@pinia/nuxt'
     ],
+
     runtimeConfig: {
         public: {
             supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
