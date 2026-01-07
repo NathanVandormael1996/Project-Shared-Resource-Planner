@@ -1,23 +1,48 @@
 <script setup>
-
+import { ref, onMounted } from 'vue'
+import { useSupabase } from '~/composables/useSupabase'
+const connectionStatus = ref('testen...')
+const supabase = useSupabase()
+onMounted(async () => {
+  if (!supabase) {
+    connectionStatus.value = 'Geen Supabase client beschikbaar'
+    return
+  }
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      connectionStatus.value = `Verbinding ok, maar auth error:
+${error.message}`
+    } else {
+      connectionStatus.value =
+          'Supabase verbinding succesvol. Client is geïnitialiseerd en klaar voor gebruik.'
+    }
+  } catch (err) {
+    connectionStatus.value = `Fout: ${err.message}`
+  }
+})
 </script>
 
 <template>
   <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
-  <nav class="flex space-x-8 border-b border-gray-700 mb-8">
-  </nav>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-2 space-y-4">
-      <h2 class="text-xl font-semibold mb-4 text-gray-400">Select Resource</h2>
+  <section class="space-y-3">
+    <h1 class="text-3xl font-bold tracking-tight">
+      Welkom in Nuxt 4 met Tailwind
+    </h1>
+    <p class="text-sm text-slate-200 max-w-2xl">
+      Deze pagina is bereikbaar via de route / en gebruikt Tailwind-klassen
+      voor layout en typografie.
+      In de navigatie bovenaan kun je naar het Kanban board gaan.
+    </p>
+    <div class="mt-6 p-4 rounded-lg bg-slate-900 border border-slate-800">
+      <h2 class="text-lg font-semibold mb-2">Supabase verbinding</h2>
+      <p class="text-sm text-slate-300">{{ connectionStatus }}</p>
+      <p class="text-xs text-slate-500 mt-2">
+        Je kunt nu de Supabase client gebruiken in je stores en composables
+        via
+        <code class="text-indigo-400">useSupabase()</code>.
+      </p>
     </div>
-    <div class="space-y-6">
-      <div class="bg-[#24262d] p-6 rounded-xl border border-gray-700 shadow-xl">
-        <h3 class="text-white font-semibold mb-4">New Reservation</h3>
-      </div>
-      <div class="space-y-3">
-        <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-widest">Today's Schedule</h3>
-      </div>
-    </div>
-  </div>
+  </section>
   </body>
 </template>
