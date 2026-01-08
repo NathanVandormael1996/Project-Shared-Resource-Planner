@@ -14,6 +14,7 @@ await useAsyncData('reservations', async () => {
 
 <template>
   <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
+  <NavButton />
     <h1 class="text-slate-50 font-bold tracking-widest text-2xl uppercase mb-6">Reservations</h1>
     <div v-if="store.loading" class="flex items-center space-x-2 text-indigo-400 animate-pulse">
       <div class="w-4 h-4 bg-indigo-400 rounded-full"></div>
