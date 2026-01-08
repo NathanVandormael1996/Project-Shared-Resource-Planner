@@ -10,9 +10,9 @@ export interface Resource {
 export interface Reservation {
     id: number;
     resource_id: number;
-    user_id: string;
+    name: string;
     title: string;
+    date: string;
     start_time: string;
     end_time: string;
-    // status: 'pending' | 'approved' | 'rejected';
 }

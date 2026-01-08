@@ -5,10 +5,8 @@ import { useResourceStore } from '~/stores/resources'
 // Activeer de store
 const store = useResourceStore()
 
-
 await useAsyncData('resources', async () => {
   await store.fetchResources()
-  await store.fetchReservations()
   return store.resources
 })
 </script>
