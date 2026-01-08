@@ -1,4 +1,19 @@
 <script setup>
+import { useReservationStore } from '~/stores/reservations'
+
+const store = useReservationStore()
+
+// Fetch
+await useAsyncData('todays-reservations', async () => {
+  await store.fetchReservations()
+  return store.reservations
+})
+
+// Filter op vandaag
+const todaysReservations = computed(() => {
+  const today = new Date().toISOString().split('T')[0] // Formaat: YYYY-MM-DD
+  return store.reservations.filter(res => res.date === today)
+})
 </script>
 
 <template>
@@ -15,6 +30,14 @@
       </div>
       <div class="space-y-3">
         <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-widest">Today's Schedule</h3>
+      </div>
+
+      <div class="space-y-1">
+        <ReservationCard
+            v-for="res in todaysReservations"
+            :key="res.id"
+            :reservation="res"
+        />
       </div>
     </div>
   </div>
