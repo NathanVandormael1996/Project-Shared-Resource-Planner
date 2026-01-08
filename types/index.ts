@@ -5,5 +5,4 @@ export interface Resource {
     description: string;
     type: 'Ruimte' | 'Apparatuur'; // Dit dwingt consistentie af
     image_url: string | null;
-    is_available: boolean;
 }

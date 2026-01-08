@@ -20,20 +20,6 @@ defineProps({
         Geen afbeelding
       </div>
 
-      <div class="absolute top-2 right-2">
-        <span
-            v-if="resource.is_available"
-            class="bg-green-500/10 text-green-400 text-xs font-bold px-2 py-1 rounded border border-green-500/20"
-        >
-          BESCHIKBAAR
-        </span>
-        <span
-            v-else
-            class="bg-red-500/10 text-red-400 text-xs font-bold px-2 py-1 rounded border border-red-500/20"
-        >
-          BEZET
-        </span>
-      </div>
     </div>
 
     <div class="p-4">
@@ -47,13 +33,9 @@ defineProps({
       </p>
 
       <button
-          class="w-full py-2 px-4 rounded font-medium text-sm transition-colors"
-          :class="resource.is_available
-          ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-          : 'bg-slate-700 text-slate-500 cursor-not-allowed'"
-          :disabled="!resource.is_available"
+          class="w-full py-2 px-4 rounded font-medium text-sm transition-colors bg-indigo-600 hover:bg-indigo-500 text-white"
       >
-        {{ resource.is_available ? 'Reserveren' : 'Niet beschikbaar' }}
+        Reserveren
       </button>
     </div>
   </div>
