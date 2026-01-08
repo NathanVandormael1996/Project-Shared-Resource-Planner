@@ -18,8 +18,7 @@ const todaysReservations = computed(() => {
 
 <template>
   <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
-  <nav class="flex space-x-8 border-b border-gray-700 mb-8">
-  </nav>
+  <NavButton />
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div class="lg:col-span-2 space-y-4">
       <h2 class="text-xl font-semibold mb-4 text-gray-400">Select Resource</h2>

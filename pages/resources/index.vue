@@ -12,6 +12,8 @@ await useAsyncData('resources', async () => {
 </script>
 
 <template>
+  <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
+  <NavButton />
   <div class="p-6 max-w-7xl mx-auto">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-white tracking-tight">Beschikbare Resources</h1>
@@ -40,4 +42,5 @@ await useAsyncData('resources', async () => {
       Geen resources gevonden.
     </div>
   </div>
+  </body>
 </template>
