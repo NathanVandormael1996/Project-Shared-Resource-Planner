@@ -1,15 +1,15 @@
-// stores/resources.js
+// stores/reservations.js
 import { defineStore } from 'pinia'
 
-export const useResourceStore = defineStore('resources', {
+export const useReservationStore = defineStore('reservations', {
     state: () => ({
-        resources: [],
+        reservations: [],
         loading: false,
         error: null
     }),
 
     actions: {
-        async fetchResources() {
+        async fetchReservations() {
             this.loading = true
             this.error = null
 
@@ -17,19 +17,19 @@ export const useResourceStore = defineStore('resources', {
                 const supabase = useSupabase()
 
                 const { data, error } = await supabase
-                    .from('resources')
+                    .from('reservations')
                     .select('*')
-                    // .order('created_at', { ascending: false })
+                    .order('date', { ascending: true })
+                    .order('start_time', { ascending: true })
 
                 if (error) throw error
 
-                this.resources = data
+                this.reservations = data
             } catch (err) {
-                console.error("Resource Store Error:", err);
+                console.error("Reservation Store Error:", err)
                 this.error = err.message
             } finally {
                 this.loading = false
             }
         }
-    }
-})
+    }})

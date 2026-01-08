@@ -19,7 +19,6 @@ defineProps({
       <div v-else class="flex items-center justify-center h-full text-slate-600">
         Geen afbeelding
       </div>
-
     </div>
 
     <div class="p-4">

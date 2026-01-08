@@ -5,7 +5,6 @@ import { useResourceStore } from '~/stores/resources'
 // Activeer de store
 const store = useResourceStore()
 
-// Roep de actie aan (server-side vriendelijk)
 await useAsyncData('resources', async () => {
   await store.fetchResources()
   return store.resources
