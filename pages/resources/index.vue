@@ -32,11 +32,13 @@ await useAsyncData('resources', async () => {
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
-      <ResourceCard
+      <NuxtLink
           v-for="item in store.resources"
           :key="item.id"
-          :resource="item"
-      />
+          :to="`/resources/${item.id}`"
+      >
+        <ResourceCard :resource="item" />
+      </NuxtLink>
     </div>
 
     <div v-if="!store.loading && !store.error && store.resources.length === 0" class="text-slate-500 italic">
