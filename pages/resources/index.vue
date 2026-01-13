@@ -14,6 +14,7 @@ await useAsyncData('resources', async () => {
 <template>
   <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
   <NavButton />
+
   <div class="p-6 max-w-7xl mx-auto">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-white tracking-tight">Beschikbare Resources</h1>
@@ -30,7 +31,7 @@ await useAsyncData('resources', async () => {
       <p class="text-sm">{{ store.error }}</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
       <ResourceCard
           v-for="item in store.resources"
           :key="item.id"
