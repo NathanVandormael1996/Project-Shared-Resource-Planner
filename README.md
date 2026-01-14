@@ -14,3 +14,7 @@ Yaman: project setup gedaan 06/01/2026
 Yaman: pinia store Geïmplementeerd 08/01/2026
 
 Yaman: Data fetching logic (resources en reservaties) 08/01/2026
+
+Nathan: Creation and application of reservation card 08/01/2026
+
+Nathan: Resources fetching logic added 14/01/2026
