@@ -1,44 +1,106 @@
 <script setup>
+import { useResourceStore } from '~/stores/resources'
 import { useReservationStore } from '~/stores/reservations'
+import { ref, computed, onMounted } from 'vue'
+import ReservationForm from '~/components/ReservationForm.vue'
 
-const store = useReservationStore()
+const resourceStore = useResourceStore()
+const reservationStore = useReservationStore()
 
-// Fetch
-await useAsyncData('todays-reservations', async () => {
-  await store.fetchReservations()
-  return store.reservations
+// Data ophalen
+await useAsyncData('dashboard-data', async () => {
+  await Promise.all([
+    resourceStore.fetchResources(),
+    reservationStore.fetchReservations()
+  ])
 })
 
-// Filter op vandaag
+// STATE: Welke resource willen we boeken? (Standaard de eerste uit de lijst)
+const selectedResourceId = ref(null)
+const todayDate = new Date().toISOString().split('T')[0]
+
+// Zodra geladen, pak de eerste resource als default
+onMounted(() => {
+  if (resourceStore.resources.length > 0) {
+    selectedResourceId.value = resourceStore.resources[0].id
+  }
+})
+
+// FILTER: Alleen vandaag
 const todaysReservations = computed(() => {
-  const today = new Date().toISOString().split('T')[0] // Formaat: YYYY-MM-DD
-  return store.reservations.filter(res => res.date === today)
+  return reservationStore.reservations.filter(res => res.date === todayDate)
 })
 </script>
 
 <template>
-  <body class="bg-[#1a1c23] text-gray-200 font-sans p-8">
-  <NavButton />
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-2 space-y-4">
-      <h2 class="text-xl font-semibold mb-4 text-gray-400">Select Resource</h2>
-    </div>
-    <div class="space-y-6">
-      <div class="bg-[#24262d] p-6 rounded-xl border border-gray-700 shadow-xl">
-        <h3 class="text-white font-semibold mb-4">New Reservation</h3>
-      </div>
-      <div class="space-y-3">
-        <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-widest">Today's Schedule</h3>
+  <div class="bg-[#1a1c23] text-gray-200 font-sans p-8 min-h-screen">
+    <NavButton />
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+
+      <div class="lg:col-span-2 space-y-4">
+        <h2 class="text-xl font-semibold mb-4 text-gray-400">Select Resource</h2>
+
+        <div class="bg-[#1a1c23]  border-gray-700 rounded-xl h-64 flex items-center justify-center text-gray-500">
+        </div>
       </div>
 
-      <div class="space-y-1">
-        <ReservationCard
-            v-for="res in todaysReservations"
-            :key="res.id"
-            :reservation="res"
-        />
+      <div class="space-y-6">
+
+        <div class="bg-[#24262d] p-6 rounded-xl border border-gray-700 shadow-xl">
+          <h3 class="text-white font-semibold mb-4 border-b border-gray-700 pb-2">
+            New Reservation
+          </h3>
+
+          <div class="animate-fadeIn space-y-4">
+
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Kies Resource</label>
+              <select
+                  v-model="selectedResourceId"
+                  class="w-full bg-[#1a1c23] border border-gray-600 text-white rounded p-2.5 outline-none focus:border-blue-500"
+              >
+                <option v-for="r in resourceStore.resources" :key="r.id" :value="r.id">
+                  {{ r.title }} ({{ r.type }})
+                </option>
+              </select>
+            </div>
+
+            <ReservationForm
+                v-if="selectedResourceId"
+                :resource-id="selectedResourceId"
+                :selected-date="todayDate"
+            />
+
+            <div v-else class="text-sm text-gray-500 text-center">
+              Laden...
+            </div>
+
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="text-gray-400 text-sm font-semibold uppercase tracking-widest">Today's Schedule</h3>
+
+          <div class="space-y-1">
+            <div v-if="todaysReservations.length === 0" class="text-gray-500 italic text-sm">
+              Geen planning voor vandaag.
+            </div>
+
+            <ReservationCard
+                v-for="res in todaysReservations"
+                :key="res.id"
+                :reservation="res"
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-  </body>
 </template>
+
+<style scoped>
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
