@@ -14,3 +14,7 @@ border-grey-700
 #1a1c23
 #### resevations: 
 #24262d
+
+## Blues resource card:
+text-blue-300
+bg/border-blue-900/40

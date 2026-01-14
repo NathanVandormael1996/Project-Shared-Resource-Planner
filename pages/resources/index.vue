@@ -72,6 +72,14 @@ const handleSave = async () => {
             @reserve="(r) => console.log('Reserve:', r.title)"
         />
       </div>
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+      <NuxtLink
+          v-for="item in store.resources"
+          :key="item.id"
+          :to="`/resources/${item.id}`"
+      >
+        <ResourceCard :resource="item" />
+      </NuxtLink>
     </div>
 
     <div v-if="isEditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">

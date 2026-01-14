@@ -14,7 +14,6 @@ const emit = defineEmits(['edit', 'delete', 'reserve']);
 
     <div class="flex-shrink-0 w-28 h-24 bg-slate-900">
       <img
-          v-if="resource.image_url"
           :src="resource.image_url"
           :alt="resource.title"
           class="w-full h-full object-cover"
