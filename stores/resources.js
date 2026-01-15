@@ -18,13 +18,12 @@ export const useResourceStore = defineStore('resources', {
 
                 if (error) throw error
 
-                // Sorting logic
+                // Sorteren: prioriteit voor 'kamer', daarna alfabetisch
                 this.resources = data.sort((a, b) => {
                     const typeA = (a.type || '').toLowerCase();
                     const typeB = (b.type || '').toLowerCase();
 
                     if (typeA === 'kamer' && typeB !== 'kamer') return -1;
-
                     if (typeB === 'kamer' && typeA !== 'kamer') return 1;
 
                     return typeA.localeCompare(typeB);
@@ -46,7 +45,7 @@ export const useResourceStore = defineStore('resources', {
 
             if (error) throw error
             if (data) {
-                // In case reservations is empty, it still shows 0
+                // Initialiseren met lege relatie array om errors te voorkomen
                 this.resources.push({ ...data[0], reservations: [] })
             }
         },
@@ -67,7 +66,7 @@ export const useResourceStore = defineStore('resources', {
             if (data) {
                 const index = this.resources.findIndex(res => res.id === id)
                 if (index !== -1) {
-                    // Put remote data into local array
+                    // Lokale state updaten met behoud van bestaande reservaties
                     this.resources[index] = { ...data[0], reservations: reservations || [] }
                 }
             }

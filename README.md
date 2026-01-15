@@ -18,3 +18,7 @@ Yaman: Data fetching logic (resources en reservaties) 08/01/2026
 Nathan: Creation and application of reservation card 08/01/2026
 
 Nathan: Resources fetching logic added 14/01/2026
+
+Yaman: Component Reservatie Formulier (inclusief validatie & extra's) toegevoegd 14/01/2026
+
+Yaman: Logica: Beschikbaarheid Berekenen (overlap check) geïmplementeerd + meerdere items tegelijkertijd kunnen reserveren 15/01/2026

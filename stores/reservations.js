@@ -8,7 +8,7 @@ export const useReservationStore = defineStore('reservations', {
     }),
 
     actions: {
-        // Bestaande fetch logica
+        // Alle reservaties ophalen van backend
         async fetchReservations() {
             this.loading = true
             this.error = null
@@ -17,34 +17,62 @@ export const useReservationStore = defineStore('reservations', {
                 const { data, error } = await supabase
                     .from('reservations')
                     .select('*')
-                    .order('date', { ascending: true })
-                    .order('start_time', { ascending: true })
 
                 if (error) throw error
-                this.reservations = data
+                this.reservations = data || []
             } catch (err) {
-                console.error("Reservation Store Error:", err)
+                console.error("Fout bij ophalen reservaties:", err)
                 this.error = err.message
             } finally {
                 this.loading = false
             }
         },
 
-        // NIEUW: Toevoegen (S3-01)
-        async addReservation(bookingDetails) {
+        // Beschikbaarheid valideren (Conflict detectie)
+        checkAvailability(resourceId, date, newStart, newEnd) {
+            const dayReservations = this.reservations.filter(res =>
+                res.resource_id === resourceId &&
+                res.date === date
+            )
+
+            // Check op tijdsoverlap
+            const hasConflict = dayReservations.some(existing => {
+                return newStart < existing.end_time && newEnd > existing.start_time
+            })
+
+            return !hasConflict
+        },
+
+        // Nieuwe reservatie aanmaken met validatie
+        async addReservation(reservation) {
             this.loading = true
             this.error = null
 
+            // 1. Beschikbaarheid checken
+            const isAvailable = this.checkAvailability(
+                reservation.resource_id,
+                reservation.date,
+                reservation.start_time,
+                reservation.end_time
+            )
+
+            if (!isAvailable) {
+                this.loading = false
+                this.error = "❌ Deze tijd is al bezet! Kies een ander moment."
+                return { success: false }
+            }
+
+            // 2. Opslaan in DB
             try {
                 const supabase = useSupabase()
 
                 const newBooking = {
-                    resource_id: bookingDetails.resource_id,
-                    name: bookingDetails.name,
-                    title: bookingDetails.title,
-                    date: bookingDetails.date,
-                    start_time: bookingDetails.start_time,
-                    end_time: bookingDetails.end_time
+                    resource_id: reservation.resource_id,
+                    name: reservation.name,
+                    title: reservation.title,
+                    date: reservation.date,
+                    start_time: reservation.start_time,
+                    end_time: reservation.end_time
                 }
 
                 const { data, error } = await supabase
@@ -54,17 +82,14 @@ export const useReservationStore = defineStore('reservations', {
 
                 if (error) throw error
 
-                // Voeg direct toe aan de lokale state (snelle UI)
-                if (data) {
+                if (data && data.length > 0) {
                     this.reservations.push(data[0])
                 }
 
                 return { success: true }
-
             } catch (err) {
-                console.error("Booking Error:", err)
-                this.error = err.message
-                return { success: false, error: err.message }
+                this.error = "Database error: " + err.message
+                return { success: false }
             } finally {
                 this.loading = false
             }
