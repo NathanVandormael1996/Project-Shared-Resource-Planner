@@ -1,18 +1,18 @@
-# Algemene style regels voor alle pagina's 
+# Algemene style regels voor alle pagina's
 
-## Font: 
+## Font:
 
-font-sans 
+font-sans
 
-## Colors: 
-### text: 
+## Colors:
+### text:
 text-grey-400
-### borders: 
+### borders:
 border-grey-700
-### background: 
-#### body + base: 
+### background:
+#### body + base:
 #1a1c23
-#### resevations: 
+#### resevations:
 #24262d
 
 ## Blues resource card:
