@@ -8,7 +8,7 @@ export const useReservationStore = defineStore('reservations', {
     }),
 
     actions: {
-        // 1. Data ophalen
+        // Alle reservaties ophalen van backend
         async fetchReservations() {
             this.loading = true
             this.error = null
@@ -28,30 +28,27 @@ export const useReservationStore = defineStore('reservations', {
             }
         },
 
-        // 2. LOGICA: Beschikbaarheid Berekenen (De "Hersenen")
+        // Beschikbaarheid valideren (Conflict detectie)
         checkAvailability(resourceId, date, newStart, newEnd) {
-            // Stap A: Filter op resource en dag
             const dayReservations = this.reservations.filter(res =>
                 res.resource_id === resourceId &&
                 res.date === date
             )
 
-            // Stap B: Check op overlap
-            // Formule: (Nieuwe Start < Bestaande Einde) EN (Nieuwe Einde > Bestaande Start)
+            // Check op tijdsoverlap
             const hasConflict = dayReservations.some(existing => {
                 return newStart < existing.end_time && newEnd > existing.start_time
             })
 
-            // Als er conflict is -> NIET beschikbaar (false)
             return !hasConflict
         },
 
-        // 3. Toevoegen (Nu mét check!)
+        // Nieuwe reservatie aanmaken met validatie
         async addReservation(reservation) {
             this.loading = true
             this.error = null
 
-            // STAP A: Check eerst lokaal of het vrij is
+            // 1. Beschikbaarheid checken
             const isAvailable = this.checkAvailability(
                 reservation.resource_id,
                 reservation.date,
@@ -65,11 +62,10 @@ export const useReservationStore = defineStore('reservations', {
                 return { success: false }
             }
 
-            // STAP B: Opslaan in Supabase
+            // 2. Opslaan in DB
             try {
                 const supabase = useSupabase()
 
-                // We sturen alleen de nodige velden
                 const newBooking = {
                     resource_id: reservation.resource_id,
                     name: reservation.name,
@@ -86,7 +82,6 @@ export const useReservationStore = defineStore('reservations', {
 
                 if (error) throw error
 
-                // Voeg toe aan lokale lijst voor directe update
                 if (data && data.length > 0) {
                     this.reservations.push(data[0])
                 }

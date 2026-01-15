@@ -4,14 +4,8 @@ import { useResourceStore } from '~/stores/resources'
 import { reactive, computed, watch } from 'vue'
 
 const props = defineProps({
-  resourceId: {
-    type: Number,
-    required: true
-  },
-  selectedDate: {
-    type: String,
-    required: true
-  }
+  resourceId: { type: Number, required: true },
+  selectedDate: { type: String, required: true }
 })
 
 const emit = defineEmits(['update-date', 'reservation-success'])
@@ -20,16 +14,21 @@ const store = useReservationStore()
 const resourceStore = useResourceStore()
 const loading = computed(() => store.loading)
 
-// Filter: Toon alles BEHALVE Kamers/Ruimtes en het item zelf
+// Feedback state voor meldingen in de UI
+const feedback = reactive({
+  show: false,
+  type: 'success',
+  message: ''
+})
+
+// Filter resource lijst: geen ruimtes en huidige item verbergen
 const extras = computed(() => {
-  if (!resourceStore.resources || resourceStore.resources.length === 0) {
-    return []
-  }
-  return resourceStore.resources.filter(r =>
-      r.id !== props.resourceId &&
-      r.type !== 'Ruimte' &&
-      r.type !== 'Kamer'
-  )
+  if (!resourceStore.resources?.length) return []
+
+  return resourceStore.resources.filter(r => {
+    const type = (r.type || '').trim()
+    return r.id !== props.resourceId && type !== 'Ruimte' && type !== 'Kamer'
+  })
 })
 
 const form = reactive({
@@ -41,68 +40,109 @@ const form = reactive({
   selectedExtras: []
 })
 
-// Sync datum
-watch(() => form.date, (newDate) => { emit('update-date', newDate) })
-watch(() => props.selectedDate, (newDate) => { form.date = newDate })
+// Datum syncen met parent component
+watch(() => form.date, (val) => emit('update-date', val))
+watch(() => props.selectedDate, (val) => form.date = val)
 
 const handleSubmit = async () => {
+  feedback.show = false
+
+  // 1. Basis validatie inputs
   if (!form.name || !form.date || !form.start_time || !form.end_time) {
-    alert("Vul alle verplichte velden in aub.")
+    feedback.type = 'error'
+    feedback.message = "Vul alle verplichte velden in (*)."
+    feedback.show = true
     return
   }
 
   if (form.start_time >= form.end_time) {
-    alert("De eindtijd moet later zijn dan de starttijd.")
+    feedback.type = 'error'
+    feedback.message = "Eindtijd moet later zijn dan starttijd."
+    feedback.show = true
     return
   }
 
-  // 1. Hoofdboeking
-  const mainBooking = {
+  // 2. Lijst opbouwen van alles wat geboekt moet worden
+  const itemsToBook = []
+
+  // Hoofd item
+  itemsToBook.push({
     resource_id: props.resourceId,
-    name: form.name,
     title: form.title,
-    date: form.date,
-    start_time: form.start_time,
-    end_time: form.end_time
+    is_main: true
+  })
+
+  // Extra items
+  for (const extraId of form.selectedExtras) {
+    const item = resourceStore.resources.find(r => r.id === extraId)
+    const name = item ? item.title : 'Extra'
+
+    itemsToBook.push({
+      resource_id: extraId,
+      title: `${form.title} (+ ${name})`,
+      is_main: false,
+      original_name: name
+    })
   }
 
+  // 3. "Dry Run": Check vooraf of ALLES beschikbaar is.
+  for (const item of itemsToBook) {
+    const isAvailable = store.checkAvailability(
+        item.resource_id,
+        form.date,
+        form.start_time,
+        form.end_time
+    )
+
+    if (!isAvailable) {
+      feedback.type = 'error'
+      const naam = item.is_main ? 'Het hoofditem' : `Extra: ${item.original_name}`
+      feedback.message = `Mislukt: ${naam} is al bezet op dit moment.`
+      feedback.show = true
+      return
+    }
+  }
+
+  // 4. Daadwerkelijk opslaan in DB
   let successCount = 0
-  let failCount = 0
 
-  const mainResult = await store.addReservation(mainBooking)
-  if (mainResult.success) successCount++
-  else failCount++
-
-  // 2. Extra's Boeken
-  for (const extraId of form.selectedExtras) {
-    const extraItem = resourceStore.resources.find(r => r.id === extraId)
-    const extraTitle = extraItem ? extraItem.title : 'Extra item'
-
-    const extraBooking = {
-      ...mainBooking,
-      resource_id: extraId,
-      title: `${form.title} (+ ${extraTitle})`
+  for (const item of itemsToBook) {
+    const payload = {
+      resource_id: item.resource_id,
+      name: form.name,
+      title: item.title,
+      date: form.date,
+      start_time: form.start_time,
+      end_time: form.end_time
     }
 
-    const res = await store.addReservation(extraBooking)
+    const res = await store.addReservation(payload)
     if (res.success) successCount++
-    else failCount++
   }
 
-  if (failCount === 0) {
-    alert(`✅ Alles succesvol gereserveerd! (${successCount} items)`)
-    // Reset velden
+  // 5. Resultaat tonen
+  feedback.show = true
+
+  if (successCount === itemsToBook.length) {
+    // Succes scenario
+    feedback.type = 'success'
+    feedback.message = `Succes! ${successCount} item(s) gereserveerd.`
+
+    // Formulier resetten
     form.name = ''
     form.title = ''
     form.start_time = ''
     form.end_time = ''
     form.selectedExtras = []
 
+    // Data refreshen
     emit('reservation-success')
     await store.fetchReservations()
+
   } else {
-    alert(`⚠️ Let op: ${successCount} item(s) gelukt, maar ${failCount} item(s) waren al bezet of mislukt.`)
-    emit('reservation-success')
+    // Fallback voor onverwachte DB errors
+    feedback.type = 'warning'
+    feedback.message = "Er ging technisch iets mis bij het opslaan."
     await store.fetchReservations()
   }
 }
@@ -119,7 +159,7 @@ const handleSubmit = async () => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-gray-400 text-sm mb-1">Jouw Naam *</label>
-          <input v-model="form.name" type="text" required class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" placeholder="Naam" />
+          <input v-model="form.name" type="text" class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" placeholder="Naam" />
         </div>
         <div>
           <label class="block text-gray-400 text-sm mb-1">Omschrijving</label>
@@ -129,17 +169,17 @@ const handleSubmit = async () => {
 
       <div>
         <label class="block text-gray-400 text-sm mb-1">Datum *</label>
-        <input v-model="form.date" type="date" required class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
+        <input v-model="form.date" type="date" class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-gray-400 text-sm mb-1">Van *</label>
-          <input v-model="form.start_time" type="time" required class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
+          <input v-model="form.start_time" type="time" class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
         </div>
         <div>
           <label class="block text-gray-400 text-sm mb-1">Tot *</label>
-          <input v-model="form.end_time" type="time" required class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
+          <input v-model="form.end_time" type="time" class="w-full bg-[#1a1c23] border border-gray-700 rounded p-2.5 text-white focus:border-blue-500 outline-none transition-colors" />
         </div>
       </div>
 
@@ -161,18 +201,22 @@ const handleSubmit = async () => {
           </div>
         </div>
       </div>
-      <div v-else class="text-xs text-gray-500 mt-2 italic">
-        (Geen extra materiaal beschikbaar)
+
+      <div v-if="feedback.show" class="p-3 rounded text-sm font-medium border transition-all animate-fadeIn"
+           :class="{
+          'bg-green-900/20 text-green-400 border-green-500/30': feedback.type === 'success',
+          'bg-red-900/20 text-red-400 border-red-500/30': feedback.type === 'error',
+          'bg-orange-900/20 text-orange-400 border-orange-500/30': feedback.type === 'warning'
+        }"
+      >
+        {{ feedback.message }}
       </div>
 
-      <button type="submit" :disabled="loading" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded transition-colors flex justify-center items-center shadow-lg">
+      <button type="submit" :disabled="loading" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded transition-colors flex justify-center items-center shadow-lg">
         <span v-if="loading">Bezig...</span>
         <span v-else>Bevestig Reservatie(s)</span>
       </button>
 
-      <div v-if="store.error" class="text-red-400 text-sm mt-2 text-center">
-        {{ store.error }}
-      </div>
     </form>
   </div>
 </template>

@@ -5,20 +5,20 @@ import { ref, computed } from 'vue'
 const store = useResourceStore()
 const resources = computed(() => store.resources)
 
-// Set global body styles the "Nuxt Way"
+// Globale layout stijlen toepassen via Nuxt head
 useHead({
   bodyAttrs: {
     class: 'min-h-screen bg-[#1a1c23] text-gray-200 font-sans'
   }
 })
 
-// Fetch data for the store
+// Store vullen met initiële data
 await useAsyncData('resources', async () => {
   await store.fetchResources()
   return store.resources
 })
 
-// Navigation handler: Only called by the 'reserve' emit
+// Navigatie naar detailpagina
 const handleReserveNavigation = (id) => {
   navigateTo(`/resources/${id}`)
 }

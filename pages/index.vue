@@ -7,7 +7,7 @@ import ReservationForm from '~/components/ReservationForm.vue'
 const resourceStore = useResourceStore()
 const reservationStore = useReservationStore()
 
-// Data ophalen
+// Initiële data ophalen (Resources & Reservaties)
 await useAsyncData('dashboard-data', async () => {
   await Promise.all([
     resourceStore.fetchResources(),
@@ -17,7 +17,7 @@ await useAsyncData('dashboard-data', async () => {
 
 const selectedResourceId = ref(null)
 
-// BELANGRIJK: Dit moet een ref zijn die verandert, zodat de lijst update!
+// Reactieve datum status voor UI updates
 const viewDate = ref(new Date().toISOString().split('T')[0])
 
 onMounted(() => {
@@ -26,7 +26,7 @@ onMounted(() => {
   }
 })
 
-// Filter op basis van viewDate (niet hardcoded vandaag)
+// Reservaties filteren op geselecteerde datum
 const todaysReservations = computed(() => {
   return reservationStore.reservations.filter(res => res.date === viewDate.value)
 })
@@ -95,8 +95,3 @@ const todaysReservations = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-</style>
