@@ -4,13 +4,13 @@ import { ref, computed } from 'vue'
 
 const store = useResourceStore()
 
-// Data ophalen (SSR compatible).
+// Data ophalen uit DB
 await useAsyncData('resources', async () => {
   await store.fetchResources()
   return store.resources
 })
 
-// --- Filter & Zoek Logica ---
+// Searh en filter
 const searchQuery = ref('')
 const selectedFilter = ref('')
 
@@ -31,7 +31,6 @@ const filteredResources = computed(() => {
   })
 })
 
-// --- Acties ---
 const handleReserveNavigation = (id) => navigateTo(`/resources/${id}`)
 
 const removeResourceFromDatabase = async (id) => {
@@ -44,16 +43,24 @@ const removeResourceFromDatabase = async (id) => {
   }
 }
 
-// --- Modal State ---
+// Modals
 const isEditModalOpen = ref(false)
 const selectedResource = ref(null)
 
 const openAddModal = () => {
-  selectedResource.value = { title: '', type: '', description: '', image_url: '' }
+  // Reset of selectedResource
+  selectedResource.value = {
+    id: null,
+    title: '',
+    type: '',
+    description: '',
+    image_url: ''
+  }
   isEditModalOpen.value = true
 }
 
 const openEditModal = (resource) => {
+  // Create a copy for safety
   selectedResource.value = { ...resource }
   isEditModalOpen.value = true
 }
@@ -150,19 +157,50 @@ const handleSave = async () => {
       <div v-if="isEditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isEditModalOpen = false"></div>
         <div class="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+
           <div class="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedResource.id ? 'Aanpassen' : 'Toevoegen' }}</h2>
-            <button @click="isEditModalOpen = false" class="text-gray-500 dark:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+              {{ selectedResource.id ? 'Resource Aanpassen' : 'Nieuwe Resource' }}
+            </h2>
+            <button @click="isEditModalOpen = false" class="text-gray-500 dark:text-white text-2xl hover:text-gray-700">&times;</button>
           </div>
 
-          <div class="p-6 space-y-4">
-            <input v-model="selectedResource.title" type="text" placeholder="Titel" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500" />
-            <textarea v-model="selectedResource.description" placeholder="Beschrijving" rows="3" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500"></textarea>
+          <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Titel</label>
+              <input v-model="selectedResource.title" type="text" placeholder="Naam van de resource" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Type</label>
+              <input
+                  v-model="selectedResource.type"
+                  list="modal-types"
+                  type="text"
+                  placeholder="bijv. Hardware, Ruimte..."
+                  class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
+              />
+              <datalist id="modal-types">
+                <option v-for="type in uniqueTypes" :key="type" :value="type" />
+              </datalist>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Afbeelding URL</label>
+              <input v-model="selectedResource.image_url" type="text" placeholder="https://..." class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Beschrijving</label>
+              <textarea v-model="selectedResource.description" placeholder="Korte beschrijving..." rows="3" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded p-3 text-gray-900 dark:text-white outline-none focus:border-indigo-500"></textarea>
+            </div>
           </div>
 
           <div class="p-6 bg-gray-50 dark:bg-slate-900/50 flex justify-end gap-3">
-            <button @click="isEditModalOpen = false" class="px-4 py-2 text-gray-600 dark:text-slate-300">Annuleren</button>
-            <button @click="handleSave" class="px-6 py-2 bg-indigo-600 text-white rounded font-bold">Opslaan</button>
+            <button @click="isEditModalOpen = false" class="px-4 py-2 text-gray-600 dark:text-slate-300 hover:underline">Annuleren</button>
+            <button @click="handleSave" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold transition-colors">
+              {{ selectedResource.id ? 'Bijwerken' : 'Opslaan' }}
+            </button>
           </div>
         </div>
       </div>
