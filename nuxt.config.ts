@@ -1,0 +1,21 @@
+export default defineNuxtConfig({
+    compatibilityDate: '2025-07-15',
+    devtools: { enabled: true },
+
+    modules: [
+        '@nuxtjs/tailwindcss',
+        '@pinia/nuxt',
+        '@nuxtjs/color-mode'
+    ],
+
+    colorMode: {
+        classSuffix: ''
+    },
+
+    runtimeConfig: {
+        public: {
+            supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
+            supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+        }
+    }
+})
