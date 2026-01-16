@@ -14,14 +14,14 @@ const store = useReservationStore()
 const resourceStore = useResourceStore()
 const loading = computed(() => store.loading)
 
-// Feedback state voor meldingen in de UI
+// Meldingen in de UI
 const feedback = reactive({
   show: false,
   type: 'success',
   message: ''
 })
 
-// Filter resource lijst: geen ruimtes en huidige item verbergen
+// Filter resource lijst
 const extras = computed(() => {
   if (!resourceStore.resources?.length) return []
 
@@ -40,7 +40,7 @@ const form = reactive({
   selectedExtras: []
 })
 
-// Datum syncen met parent component
+// Datum syncen
 watch(() => form.date, (val) => emit('update-date', val))
 watch(() => props.selectedDate, (val) => form.date = val)
 
@@ -85,7 +85,7 @@ const handleSubmit = async () => {
     })
   }
 
-  // 3. "Dry Run": Check vooraf of ALLES beschikbaar is.
+  // 3. Check of het beschikbaar is
   for (const item of itemsToBook) {
     const isAvailable = store.checkAvailability(
         item.resource_id,
@@ -103,7 +103,7 @@ const handleSubmit = async () => {
     }
   }
 
-  // 4. Daadwerkelijk opslaan in DB
+  // 4. Opslaan in DB
   let successCount = 0
 
   for (const item of itemsToBook) {
@@ -124,7 +124,7 @@ const handleSubmit = async () => {
   feedback.show = true
 
   if (successCount === itemsToBook.length) {
-    // Succes scenario
+    // Succes
     feedback.type = 'success'
     feedback.message = `Succes! ${successCount} item(s) gereserveerd.`
 
