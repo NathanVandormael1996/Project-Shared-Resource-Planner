@@ -46,8 +46,16 @@ const handleCalendarSelect = ({ resourceId, date }) => {
 </script>
 
 <template>
-  <div class="bg-[#1a1c23] text-gray-200 font-sans p-8 min-h-screen">
-    <NavButton />
+  <div class="min-h-screen transition-colors duration-300 bg-white text-gray-900 dark:bg-[#1a1c23] dark:text-gray-200 p-8 font-sans">
+
+    <div class="flex justify-between items-start">
+      <NavButton />
+      <ThemeToggle />
+    </div>
+
+    <div class="bg-gray-100 dark:bg-[#24262d] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl">
+    </div>
+
 
     <div v-if="resourceStore.resources.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
 
